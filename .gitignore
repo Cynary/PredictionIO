@@ -11,3 +11,4 @@ vendors
 .DS_Store
 .idea
 .gradle
+*.py~
