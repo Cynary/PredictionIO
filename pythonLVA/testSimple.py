@@ -91,7 +91,7 @@ def reduceFn(key, values):
         # Update start and end timestamps.
         if startTimeStamp > timeStamp:
             startTimeStamp = timeStamp
-        elif endTimeStamp < timeStamp:
+        if endTimeStamp < timeStamp:
             endTimeStamp = timeStamp
 
     # No training data, just return 0
@@ -99,8 +99,8 @@ def reduceFn(key, values):
         return 0
         
     # Calculate training and test durations
-    trainDuration = cutTimeStamp - startTimeStamp
-    testDuration = endTimeStamp - cutTimeStamp
+    trainDuration = max(0,cutTimeStamp - startTimeStamp)
+    testDuration = max(0,endTimeStamp - cutTimeStamp)
 
     # Calculate the rate, and use it to make a prediction.
     # Note: assuming python3, so this is float division
@@ -108,13 +108,11 @@ def reduceFn(key, values):
     prediction = rate * testDuration
 
     error = predictError(prediction,res['test'])
-    print(error)
-
     return error
 
 # Calculate the total error
 if __name__ == "__main__":
-    year,month,day = 2009,1,1
+    year,month,day = 2005,1,1
     # Parse the points
     movieInfo = parserNF.parseMovies(getMoviesPath())
     #pointsList = parserNF.parseFiles(getDataPathList(), movieInfo)
@@ -133,6 +131,8 @@ if __name__ == "__main__":
                 else:
                     mapped[key] = [value]
 
+    code.interact(local=locals())
+
     # for point in pointsList:
     #     # Get customerID,timestamp
     #     key,value = mapFn(point)
@@ -144,6 +144,9 @@ if __name__ == "__main__":
     # Calculate total error
     totalError = 0
     for key,values in mapped.items():
-        totalError += reduceFn(key,values)
+        error = reduceFn(key,values)
+        totalError += error
+        if totalError == inf or error == inf:
+            code.interact(local=locals())
 
     print(totalError)
