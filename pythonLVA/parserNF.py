@@ -1,7 +1,24 @@
 #!/usr/bin/python
+"""
+File contains a parser for the netflix data set.
+Can be called from the command line.
+"""
+
 import code
 import argparse
 from dataPoints import NetflixDataPoint
+
+"""
+Functions implemented here:
+parseMovies - takes movie titles file path and returns a movieInfo data structure
+parseFiles - takes a list of paths to data files, and a movieInfo data structure,
+             and returns a list of dataPoints that it parsed (NetflixDataPoint).
+parseFile - takes a file descriptor, and processes all its data points. It is
+            actually a generator that iterates over the points. To be used by
+            parseFiles
+parserCMD - parses command line arguments, and puts user in a python shell with
+            dataPoints
+"""
     
 # Arguments
 #   titlesPath: path of the movies_title.txt file
@@ -27,7 +44,7 @@ def parseMovies(titlesPath):
     movieInfo = {}
     with open(titlesPath,encoding="ISO-8859-1") as titlesFile:
         for movie in titlesFile:
-            (ID,year,title) = movie[:-2].split(',',2)
+            (ID,year,title) = movie[:-1].split(',',2)
             movieInfo[int(ID)] = (year,title)
     return movieInfo
 
@@ -85,11 +102,11 @@ def parseFile(dataFile,movieInfo):
     # movieInfo is a map from IDs to information data structures, returned by parseMovies
     currentMovie = movieInfo.get(movieID, None)
     for line in dataFile:
-        line = line[:-2]
+        line = line[:-1]
         yield NetflixDataPoint(line, movieID, currentMovie)
 
-# Called from the command line
-if __name__ == "__main__":
+# Function to be called in case this is called from the command line
+def parserCMD():
     # Parsing command line arguments and automating the help message
     # There are three command line argument types: -h show help message;
     # -m movie_titles.txt_file
@@ -122,3 +139,7 @@ if __name__ == "__main__":
 
     # Drop user into a shell, with the current environment
     code.interact(local=locals())
+
+# Called from the command line
+if __name__ == "__main__":
+    parserCMD()
