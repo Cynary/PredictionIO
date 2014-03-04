@@ -72,7 +72,7 @@ def mapFn(dataPoint):
 # Ouptut
 #   error for this customer
 def reduceFn(key, values):
-    global year,month,day
+    #global year,month,day
     res = {'train': 0, 'test': 0}
 
     # Start and end timestamps (used to calculate period duration for training and
@@ -81,7 +81,10 @@ def reduceFn(key, values):
     endTimeStamp = -inf
 
     # "cut" timestamp of the date when testing data starts.
-    cutTimeStamp = getTimeStamp(year,month,day)
+    # cutTimeStamp = getTimeStamp(year,month,day)
+
+    # Find "cut" timestamp to separate training/testing: average of the timestamps
+    cutTimeStamp = sum(values)/len(values)
     
     for timeStamp in values:
         # If the timestamp is before the "cut", then this is train, otherwise test.
@@ -99,8 +102,8 @@ def reduceFn(key, values):
         return 0
         
     # Calculate training and test durations
-    trainDuration = max(0,cutTimeStamp - startTimeStamp)
-    testDuration = max(0,endTimeStamp - cutTimeStamp)
+    trainDuration = cutTimeStamp - startTimeStamp
+    testDuration = endTimeStamp - cutTimeStamp
 
     # Calculate the rate, and use it to make a prediction.
     # Note: assuming python3, so this is float division
@@ -131,7 +134,7 @@ if __name__ == "__main__":
                 else:
                     mapped[key] = [value]
 
-    code.interact(local=locals())
+    #code.interact(local=locals())
 
     # for point in pointsList:
     #     # Get customerID,timestamp
@@ -143,10 +146,16 @@ if __name__ == "__main__":
 
     # Calculate total error
     totalError = 0
+    nusers = len(mapped)
+    nactions = len([i for sub in mapped.values() for i in sub])
+    print("Number of users: ", nusers) # 480189
     for key,values in mapped.items():
         error = reduceFn(key,values)
         totalError += error
         if totalError == inf or error == inf:
             code.interact(local=locals())
 
-    print(totalError)
+    print("Average square error: ", totalError/nusers) # 28456820.787530653
+    print("Average number of actions: ", nactions/nusers) # 209.25199660966828
+    
+    code.interact(local=locals())
