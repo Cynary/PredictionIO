@@ -14,14 +14,20 @@ import code
 import os
 import time
 import datetime
-from hmmLearn import HMMLearner
+import pickle
+import random
+from hmmLearner import HMMLearner
+from simpleLearner import SimpleLearner
+import errorFns
 
 inf = float("inf")
 
+# Parameters for learning, and testing, so that we don't take forever, every time
+nLearning = 100
+nTesting = 10000
+
 # Prediction error calculation.
-# At the moment, it is the percent error
-def predictError(predicted,actual):
-    return abs(predicted/actual-1.)
+predictError = errorFns.percentError
 
 # Arguments
 #   year,month,day
@@ -67,79 +73,94 @@ def splitFn(timeStamps, fracTrain=0.5):
     trainStamps = timeStamps[:endTrain]
     testStamps = timeStamps[endTrain:]
     
-    valid = len(trainStamps) >= 5
-    testDuration = testStamps[0]-trainStamps[-1] if (len(testStamps) and valid) != 0 else 0
+    valid = (len(trainStamps) >= 5) and (len(testStamps) != 0)
+    testDuration = testStamps[0]-trainStamps[-1] if (len(testStamps) != 0 and valid) else 0
     
     return (trainStamps, len(testStamps), testDuration, valid)
 
-# Calculate the total error
-if __name__ == "__main__":
-    # # Parse the points
-    # movieInfo = parserNF.parseMovies(getMoviesPath())
-
-    # # mapped will contain a map from customerID to a list of timeStamps
-    # mapped = {}
-    # i = 0
-    # for path in getDataPathList():
-    #     if i%10 == 0:
-    #         print("Processed", i, "files.")
-    #     i = i+1
-    #     with open(path) as dataFile:
-    #         # The parseFile function is a generator.
-    #         # It parses individual data points, until done with the file.
-    #         parser = parserNF.parseFile(dataFile,movieInfo)
-    #         for dataPoint in parser:
-    #             key,value = mapFn(dataPoint)
-    #             if key in mapped:
-    #                 mapped[key].append(value)
-    #             else:
-    #                 mapped[key] = [value]
-
-    # # This always takes forever, this is the last time
-    import pickle
-    # with open("pickleDataFile", "wb") as f:
-    #     pickle.dump(mapped, f)
-
-    # SO MUCH WIN!!!
-    # with open("pickleDataFile", "rb") as f:
-    #     mapped = pickle.load(f)
+def getData():
+    # Check if the result already exists, and if it does, return
+    try:
+        # SO MUCH WIN!!!
+        with open("pickleDataFile", "rb") as f:
+            mapped = pickle.load(f)
+    except FileNotFoundError:
+        print("Processing NetFlix data set")
+        # Parse the points
+        movieInfo = parserNF.parseMovies(getMoviesPath())
     
-    # # Get the train/test splits.
-    # train = {}
-    # test = {}
-    # for customerID,timeStamps in mapped.items():
-    #     trainStamps, testNumber, testDuration, valid = splitFn(timeStamps)
-    #     if valid:
-    #         train[customerID] = trainStamps
-    #         test[customerID] = (testNumber, testDuration)
-    # del mapped
+        # mapped will contain a map from customerID to a list of timeStamps
+        mapped = {}
+        i = 0
+        for path in getDataPathList():
+            if i%10 == 0:
+                print("Processed", i, "files.")
+            i = i+1
+            with open(path) as dataFile:
+                # The parseFile function is a generator.
+                # It parses individual data points, until done with the file.
+                parser = parserNF.parseFile(dataFile,movieInfo)
+                for dataPoint in parser:
+                    key,value = mapFn(dataPoint)
+                    if key in mapped:
+                        mapped[key].append(value)
+                    else:
+                        mapped[key] = [value]
+    
+        # This is a heavy operation, so save the results
+        with open("pickleDataFile", "wb") as f:
+            pickle.dump(mapped, f)
+    print("Done Processing")
+    return mapped
 
-    # with open("pickleTrainFile", "wb") as f, open("pickleTestFile", "wb") as t:
-    #     pickle.dump(train, f)
-    #     pickle.dump(test, t)
+def getSplitData():
+    try:
+        # EVEN MORE WIN!!
+        with open("pickleTrainFile", "rb") as f, open("pickleTestFile", "rb") as t:
+            train = pickle.load(f)
+            test = pickle.load(t)
+    except FileNotFoundError:
+        print("Splitting NetFlix dataset")
+        mapped = getData()
+        # Get the train/test splits.
+        train = {}
+        test = {}
+        for customerID,timeStamps in mapped.items():
+            trainStamps, testNumber, testDuration, valid = splitFn(timeStamps)
+            if valid:
+                train[customerID] = trainStamps
+                test[customerID] = (testNumber, testDuration)
+        del mapped
 
-    # EVEN MORE WIN!!
-    with open("pickleTrainFile", "rb") as f, open("pickleTestFile", "rb") as t:
-        train = pickle.load(f)
-        test = pickle.load(t)
+        # Heavy operation, save the results
+        with open("pickleTrainFile", "wb") as f, open("pickleTestFile", "wb") as t:
+            pickle.dump(train, f)
+            pickle.dump(test, t)
+    print("Done Splitting")
+    return (train, test)
 
-    print("Reading, and mapping is complete. Learning now.")
+# Calculate the average error
+if __name__ == "__main__":
+    train, test = getSplitData()
+
+    print("Data acquisition complete, reading now.")
+    print("Learning with", nLearning, "data points")
     
     learner = HMMLearner()
-    learner.learn(train.items())
+    # learner = SimpleLearner()
+    learner.learn(random.sample(train.items(), nLearning))
 
-    print("Learning is complete now.")
+    print("Learning is complete, testing")
 
-    # Calculate total error
-    totalError = 0
-    nusers = len(train)
-    print("Number of users: ", nusers) # 480189
-    for customerID,(testNumber, testDuration) in test.items():
+    # Calculate average error
+    # nTesting = len(train)
+    error = 0
+    print("Testing for", nTesting, "data points.")
+    for customerID,(testNumber, testDuration) in random.sample(test.items(), nTesting):
         user = (customerID, train[customerID])
         prediction = learner.predict(user, testDuration)
-        totalError += predictError(prediction, testNumber)
+        error += predictError(prediction, testNumber)/nTesting
 
-    print("Average percentage error: ", totalError/nusers) # 28456820.787530653
-    print("Average number of actions: ", nactions/nusers) # 209.25199660966828
+    print("Average error:", error)
     
     code.interact(local=locals())

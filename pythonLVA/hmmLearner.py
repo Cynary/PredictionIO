@@ -23,6 +23,7 @@ class HMMLearner:
     # to train the HMM of scikit-learn
     # Note: you should call this function for a single agent's data
     def inputParser(self,data):
+        data = sorted(data)
         prevTime = data[0]
         output = []
         for t in islice(data,1,len(data)):
@@ -31,9 +32,6 @@ class HMMLearner:
         return np.array(output)
 
     def learn(self,data):
-        import random
-        # Sample the data
-        data = random.sample(data, 100)
         self.model = self.getModel([self.inputParser(u) for ID,u in data])
 
     def predict(self, user, period):
