@@ -1,5 +1,6 @@
 from itertools import islice
 from sklearn import hmm
+from sklearn.cluster import KMeans
 import numpy as np
 import time
 
@@ -12,7 +13,8 @@ import time
 
 class HMMLearner:
     def __init__(self):
-        pass
+        self.clusters = 2
+        self.models = None
 
     # Data is input as lists of timestamps, and we want lists of intervals between
     # actions.
@@ -32,19 +34,38 @@ class HMMLearner:
         return np.array(output)
 
     def learn(self,data):
-        self.model = self.getModel([self.inputParser(u) for ID,u in data])
+        k = KMeans(init='k-means++', n_clusters=self.clusters, n_init=10)
+        k.fit([[float(len(u))] for ID,u in data])
+        print(k.cluster_centers_)
+        groups = [[] for i in range(self.clusters)]
+        for ID,u in data:
+            groups[k.predict(float(len(u)))[0]].append(self.inputParser(u))
+        self.models = [self.getModel(group) for group in groups]
 
     def predict(self, user, period):
+        if self.models is None:
+            return None
+
         userID,timeStamps = user
         data = self.inputParser(timeStamps)
-        originalStart = self.model.startprob_
-        self.model.startprob_ = self.model.predict_proba(data)[-1]
+
+        # Find best fit model
+        model = None
+        score = float("-inf")
+        for m in self.models:
+            newScore = m.score(data)
+            if newScore > score:
+                score = newScore
+                model = m
+        
+        originalStart = model.startprob_
+        model.startprob_ = model.predict_proba(data)[-1]
 
         n = 1
-        while sum(self.model.sample(n)[0]) <= period:
+        while sum(model.sample(n)[0]) <= period:
             n = n+1
         predicted = n-1
-        self.model.startprob_ = originalStart
+        model.startprob_ = originalStart
         
         return predicted
 
@@ -58,7 +79,7 @@ class HMMLearner:
         prevModel = None
         prevScore = float("-inf")
         n = 1
-        while time.time()-start < timeout and n < 7:
+        while time.time()-start < timeout and n < 7: # n > 6 often crashes with few data points :(
             # Start with a fair start prob/transition matrix
             startprob = np.array([1./n for i in range(n)])
             transmat = np.array(np.array([startprob for i in range(n)]))

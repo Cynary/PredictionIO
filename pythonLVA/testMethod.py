@@ -16,18 +16,26 @@ import time
 import datetime
 import pickle
 import random
-from hmmLearner import HMMLearner
-from simpleLearner import SimpleLearner
+import hmmLearner
+import partitionHmmLearner
+import simpleLearner
 import errorFns
 
 inf = float("inf")
 
 # Parameters for learning, and testing, so that we don't take forever, every time
-nLearning = 100
-nTesting = 10000
+nLearning = 200
+nTesting = 1000
+Learner = hmmLearner.HMMLearner
+#Learner = partitionHmmLearner.HMMLearner
+#Learner = simpleLearner.SimpleLearner
 
 # Prediction error calculation.
-predictError = errorFns.percentError
+predictError = [
+    errorFns.magError,
+    errorFns.percentError,
+    errorFns.squareError,
+    ]
 
 # Arguments
 #   year,month,day
@@ -146,20 +154,20 @@ if __name__ == "__main__":
     print("Data acquisition complete, reading now.")
     print("Learning with", nLearning, "data points")
     
-    learner = HMMLearner()
-    # learner = SimpleLearner()
+    learner = Learner()
     learner.learn(random.sample(train.items(), nLearning))
 
     print("Learning is complete, testing")
 
     # Calculate average error
     # nTesting = len(train)
-    error = 0
+    error = [0]*len(predictError)
     print("Testing for", nTesting, "data points.")
     for customerID,(testNumber, testDuration) in random.sample(test.items(), nTesting):
         user = (customerID, train[customerID])
         prediction = learner.predict(user, testDuration)
-        error += predictError(prediction, testNumber)/nTesting
+        for i,errorFn in enumerate(predictError):
+            error[i] += errorFn(prediction, testNumber)/nTesting
 
     print("Average error:", error)
     
