@@ -15,7 +15,8 @@ def NetflixDataPoint(dataString, movieID, currentMovie):
     year = int(year)
     month = int(month)
     day = int(day)
-    return (customerID,year,month,day)
+    rating = int(rating)
+    return (customerID,year,month,day,rating)
 
 # NetflixDataPoint refers to specific data points
 # class NetflixDataPoint(DataPoint):

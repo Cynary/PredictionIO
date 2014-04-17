@@ -12,9 +12,10 @@ import time
 # Extension: actions have descriptions, how to add it to this model?
 
 class HMMLearner:
-    def __init__(self):
-        self.clusters = 2
+    def __init__(self, clusters = 2):
+        self.clusters = clusters
         self.models = None
+        self.name = "HMM+Cluster(%d)" % self.clusters
 
     # Data is input as lists of timestamps, and we want lists of intervals between
     # actions.
@@ -26,11 +27,11 @@ class HMMLearner:
     # Note: you should call this function for a single agent's data
     def inputParser(self,data):
         data = sorted(data)
-        prevTime = data[0]
+        prevTime = data[0][0]
         output = []
         for t in islice(data,1,len(data)):
-            output.append([t-prevTime])
-            prevTime = t
+            output.append([t[0]-prevTime])
+            prevTime = t[0]
         return np.array(output)
 
     def learn(self,data):

@@ -17,5 +17,5 @@ class CombinationLearner:
     def predict(self, user, period):
         prediction = 0
         for a,l in zip(alphas,learners):
-            prediction += a*l.predict(self, user, period)
+            prediction += a*l.predict(user, period)
         return prediction

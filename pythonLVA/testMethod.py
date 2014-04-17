@@ -24,10 +24,10 @@ import errorFns
 inf = float("inf")
 
 # Parameters for learning, and testing, so that we don't take forever, every time
-nLearning = 200
+nLearning = 500
 nTesting = 1000
-Learner = hmmLearner.HMMLearner
-#Learner = partitionHmmLearner.HMMLearner
+#Learner = hmmLearner.HMMLearner
+Learner = partitionHmmLearner.HMMLearner
 #Learner = simpleLearner.SimpleLearner
 
 # Prediction error calculation.

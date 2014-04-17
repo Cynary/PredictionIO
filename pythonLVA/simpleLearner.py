@@ -13,7 +13,7 @@ import datetime
 
 class SimpleLearner():
     def __init__(self):
-        pass
+        self.name = "SimpleLearner"
 
     def learn(self, data):
         pass
@@ -23,7 +23,7 @@ class SimpleLearner():
         # So we will add a whole day to the data to account for that.
         oneDay = 24*60*60 # 24h*60m*60s
         data = sorted(user[1])
-        learnPeriod = data[-1]-data[0] + oneDay
+        learnPeriod = data[-1][0]-data[0][0] + oneDay
         nactions = len(data)
         rate = nactions/learnPeriod # #actions/s
         return period*rate # #actions

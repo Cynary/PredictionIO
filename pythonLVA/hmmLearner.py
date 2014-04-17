@@ -24,11 +24,11 @@ class HMMLearner:
     # Note: you should call this function for a single agent's data
     def inputParser(self,data):
         data = sorted(data)
-        prevTime = data[0]
+        prevTime = data[0][0]
         output = []
         for t in islice(data,1,len(data)):
-            output.append([t-prevTime])
-            prevTime = t
+            output.append([t[0]-prevTime])
+            prevTime = t[0]
         return np.array(output)
 
     def learn(self,data):

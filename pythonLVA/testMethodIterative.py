@@ -51,11 +51,11 @@ def getTimeStamp(year,month,day):
     
 # Returns a list with all the data file paths
 def getDataPathList():
-    directory = "../download/training_set"
+    directory = "../../download/training_set"
     return [os.path.join(directory, f) for f in os.listdir(directory)]
 
 def getMoviesPath():
-    return "../download/movie_titles.txt"
+    return "../../download/movie_titles.txt"
 
 # MapReduce style function.
 # Gets NetflixDataPoints, and returns tuples
@@ -68,9 +68,9 @@ def getMoviesPath():
 #   to later be reduced (processed).
 def mapFn(dataPoint):
     # Point date
-    customerID,year,month,day = dataPoint
+    customerID,year,month,day,rating = dataPoint
     timestamp = getTimeStamp(year,month,day)
-    return (customerID,timestamp)
+    return (customerID,(timestamp,rating))
 
 # Gets the data from a user as [timeStamps]
 # Returns a split of that data into training and testing sets.
@@ -84,7 +84,7 @@ def splitFn(timeStamps, fracTrain=0.5):
     testStamps = timeStamps[endTrain:]
     
     valid = (len(trainStamps) >= 5) and (len(testStamps) != 0)
-    testDuration = testStamps[0]-trainStamps[-1] if (len(testStamps) != 0 and valid) else 0
+    testDuration = testStamps[0][0]-trainStamps[-1][0] if (len(testStamps) != 0 and valid) else 0
     
     return (trainStamps, len(testStamps), testDuration, valid)
 
@@ -99,7 +99,7 @@ def getData():
         # Parse the points
         movieInfo = parserNF.parseMovies(getMoviesPath())
     
-        # mapped will contain a map from customerID to a list of timeStamps
+        # mapped will contain a map from customerID to a list of timeStamps, and ratings
         mapped = {}
         i = 0
         for path in getDataPathList():
