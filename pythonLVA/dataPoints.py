@@ -9,6 +9,8 @@ class DataPoint:
     pass
 
 def NetflixDataPoint(dataString, movieID, currentMovie):
+    movieYear,movieTitle = currentMovie
+    
     customerID,rating,date = dataString.split(',')
     year,month,day = date.split('-')
     customerID = int(customerID)
@@ -16,7 +18,8 @@ def NetflixDataPoint(dataString, movieID, currentMovie):
     month = int(month)
     day = int(day)
     rating = int(rating)
-    return (customerID,year,month,day,rating)
+
+    return (customerID,year,month,day,rating,movieYear)
 
 # NetflixDataPoint refers to specific data points
 # class NetflixDataPoint(DataPoint):

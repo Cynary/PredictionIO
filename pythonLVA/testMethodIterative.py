@@ -18,6 +18,7 @@ import pickle
 import random
 import hmmLearner
 import partitionHmmLearner
+import partitionHmmLearner2
 import simpleLearner
 import errorFns
 import combinationLearner
@@ -30,7 +31,8 @@ nTesting = 10000
 #Learner = hmmLearner.HMMLearner
 #Learner = partitionHmmLearner.HMMLearner
 #Learner = simpleLearner.SimpleLearner
-Learner = combinationLearner.CombinationLearner
+#Learner = combinationLearner.CombinationLearner
+Learner = partitionHmmLearner2.HMMLearner
 
 # Prediction error calculation.
 predictError = [
@@ -51,11 +53,11 @@ def getTimeStamp(year,month,day):
     
 # Returns a list with all the data file paths
 def getDataPathList():
-    directory = "../../download/training_set"
+    directory = "../download/training_set"
     return [os.path.join(directory, f) for f in os.listdir(directory)]
 
 def getMoviesPath():
-    return "../../download/movie_titles.txt"
+    return "../download/movie_titles.txt"
 
 # MapReduce style function.
 # Gets NetflixDataPoints, and returns tuples
@@ -68,9 +70,9 @@ def getMoviesPath():
 #   to later be reduced (processed).
 def mapFn(dataPoint):
     # Point date
-    customerID,year,month,day,rating = dataPoint
+    customerID,year,month,day,rating,movieYear = dataPoint
     timestamp = getTimeStamp(year,month,day)
-    return (customerID,(timestamp,rating))
+    return (customerID,(timestamp,rating,movieYear))
 
 # Gets the data from a user as [timeStamps]
 # Returns a split of that data into training and testing sets.
@@ -78,15 +80,15 @@ def mapFn(dataPoint):
 # Returns: ([trainingStamps], [testingStamps], testDuration, valid)
 # valid indicates whether we should use this data point or not (we should only use
 # datapoints with 2 or more datapoints in the trainSet)
-def splitFn(timeStamps, fracTrain=0.5):
-    endTrain = max(int(fracTrain*len(timeStamps)), 5)
-    trainStamps = timeStamps[:endTrain]
-    testStamps = timeStamps[endTrain:]
+def splitFn(actions, fracTrain=0.5):
+    endTrain = max(int(fracTrain*len(actions)), 5)
+    train = actions[:endTrain]
+    test = actions[endTrain:]
     
-    valid = (len(trainStamps) >= 5) and (len(testStamps) != 0)
-    testDuration = testStamps[0][0]-trainStamps[-1][0] if (len(testStamps) != 0 and valid) else 0
+    valid = (len(train) >= 5) and (len(test) != 0)
+    testDuration = test[0][0]-train[-1][0] if (len(test) != 0 and valid) else 0
     
-    return (trainStamps, len(testStamps), testDuration, valid)
+    return (train, len(test), testDuration, valid)
 
 def getData():
     # Check if the result already exists, and if it does, return
@@ -117,9 +119,15 @@ def getData():
                     else:
                         mapped[key] = [value]
     
+        for customerID in list(mapped.keys()):
+            if len(mapped[customerID]) < 5:
+                del mapped[customerID]
+
         # This is a heavy operation, so save the results
         with open("pickleDataFile", "wb") as f:
-            pickle.dump(mapped, f)
+            p = pickle.Pickler(f)
+            p.fast = True
+            p.dump(mapped)
     print("Done Processing")
     return mapped
 
@@ -135,17 +143,21 @@ def getSplitData():
         # Get the train/test splits.
         train = {}
         test = {}
-        for customerID,timeStamps in mapped.items():
-            trainStamps, testNumber, testDuration, valid = splitFn(timeStamps)
+        for customerID,actions in mapped.items():
+            trainActions, testNumber, testDuration, valid = splitFn(actions)
             if valid:
-                train[customerID] = trainStamps
+                train[customerID] = trainActions
                 test[customerID] = (testNumber, testDuration)
         del mapped
 
         # Heavy operation, save the results
         with open("pickleTrainFile", "wb") as f, open("pickleTestFile", "wb") as t:
-            pickle.dump(train, f)
-            pickle.dump(test, t)
+            pTrain = pickle.Pickler(f)
+            pTest = pickle.Pickler(t)
+            pTrain.fast = True
+            pTest.fast = True
+            pTrain.dump(train)
+            pTest.dump(test)
     print("Done Splitting")
     return (train, test)
 
@@ -183,5 +195,5 @@ if __name__ == "__main__":
                     j = j+1
                 except KeyboardInterrupt:
                     raise
-                except:
-                    print("Error occurred")
+                # except Exception as e:
+                #     print("Error occurred",str(e))
