@@ -25,3 +25,5 @@ class LinearRegressionLearner(BaseLearner):
         rate = self.model.decision_function(self.getFeatures(actions))[0]
         return rate*period
 
+def Learner():
+    return lambda: LinearRegressionLearner()

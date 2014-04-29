@@ -25,3 +25,5 @@ class DecisionTreeLearner(BaseLearner):
         rate = self.model.predict(self.getFeatures(actions))[0]
         return rate*period
 
+def Learner():
+    return lambda: DecisionTreeLearner()

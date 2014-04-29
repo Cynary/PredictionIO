@@ -1,10 +1,14 @@
 import partitionHmmLearner
 import simpleLearner
 
-learners = [
-    partitionHmmLearner.HMMLearner(2),
-    simpleLearner.SimpleLearner()]
-alphas = [0.5,0.5]
+def Learner(clusters=2):
+    global learners,alphas
+    learners = [
+        partitionHmmLearner.HMMLearner(clusters),
+        simpleLearner.SimpleLearner()]
+    alphas = [0.5,0.5]
+
+    return lambda: CombinationLearner()
 
 class CombinationLearner:
     def __init__(self):

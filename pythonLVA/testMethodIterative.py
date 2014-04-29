@@ -15,7 +15,7 @@ from testMethod import *
 # Calculate the average error
 if __name__ == "__main__":
     nLearners = [500,1000,1500,2000,2500,3000]
-    Learner = partitionHmmLearner.HMMLearner
+    Learner = partitionHmmLearner.Learner()
     
     train, test = getSplitData()
     print("Data acquisition complete, reading now.")

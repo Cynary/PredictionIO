@@ -1,4 +1,4 @@
-from baseLearner import BaseLearner
+from hmmLearner import HMMLearner
 from sklearn import hmm
 from sklearn.cluster import KMeans
 import numpy as np
@@ -11,7 +11,10 @@ import time
 
 # Extension: actions have descriptions, how to add it to this model?
 
-class HMMLearner(BaseLearner):
+def Learner(clusters=2):
+    return lambda: PartitionHMMLearner(clusters)
+
+class PartitionHMMLearner(HMMLearner):
     def __init__(self, clusters = 2):
         self.clusters = clusters
         self.models = None
@@ -25,7 +28,7 @@ class HMMLearner(BaseLearner):
         k.fit(y)
 
         groups = [[] for i in range(self.clusters)]
-        for u,y in zip(IDs,train,y):
+        for u,y in zip(train,y):
             groups[k.predict(y)[0]].append(self.inputParser(u))
         self.models = [self.getModel(group) for group in groups]
 
@@ -33,8 +36,8 @@ class HMMLearner(BaseLearner):
         if self.models is None:
             return None
 
-        userID,timeStamps = user
-        data = self.inputParser(timeStamps)
+        userID,actions = user
+        data = self.inputParser(actions)
 
         # Find best fit model
         model = None
@@ -55,32 +58,3 @@ class HMMLearner(BaseLearner):
         model.startprob_ = originalStart
         
         return predicted
-
-    # This function returns an HMM trained on the input data. Data should be a list of
-    # intervals between actions.
-    # It tries multiple models, until it runs out of time, or finds a local minima in
-    # the score.
-    # It simply iterates on the number of states.
-    def getModel(self,data, timeout=600):
-        start = time.time()
-        prevModel = None
-        prevScore = float("-inf")
-        n = 1
-        while time.time()-start < timeout and n < 7: # n > 6 often crashes with few data points :(
-            # Start with a fair start prob/transition matrix
-            startprob = np.array([1./n for i in range(n)])
-            transmat = np.array(np.array([startprob for i in range(n)]))
-            model = hmm.GaussianHMM(n, "full", startprob, transmat, n_iter=100)
-            try:
-                model.fit(data)
-                score = sum([1./len(data)*model.score(d) for d in data])
-            except ValueError:
-                return prevModel
-            print(n,score)
-            if score < prevScore: # Local maxima found
-                return prevModel
-            else:
-                prevModel = model
-                prevScore = score
-            n = n+1
-        return prevModel

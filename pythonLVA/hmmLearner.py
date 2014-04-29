@@ -1,4 +1,4 @@
-from itertools import islice
+from baseLearner import BaseLearner
 from sklearn import hmm
 import numpy as np
 import time
@@ -10,26 +10,12 @@ import time
 
 # Extension: actions have descriptions, how to add it to this model?
 
-class HMMLearner:
+def Learner():
+    return lambda: HMMLearner()
+
+class HMMLearner(BaseLearner):
     def __init__(self):
         pass
-
-    # Data is input as lists of timestamps, and we want lists of intervals between
-    # actions.
-    # This function takes a list of (action, time) items, and outputs a list of
-    # intervals
-    # data: list of (time) -> list of (interval)
-    # This will actually be a list of single element lists, so that they can be used
-    # to train the HMM of scikit-learn
-    # Note: you should call this function for a single agent's data
-    def inputParser(self,data):
-        data = sorted(data)
-        prevTime = data[0][0]
-        output = []
-        for t in islice(data,1,len(data)):
-            output.append([t[0]-prevTime])
-            prevTime = t[0]
-        return np.array(output)
 
     def learn(self,data):
         _,train,_ = zip(*data)

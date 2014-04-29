@@ -27,3 +27,5 @@ class SimpleLearner():
         nactions = len(data)
         rate = nactions/learnPeriod # #actions/s
         return period*rate # #actions
+
+Learner = lambda: lambda: SimpleLearner()

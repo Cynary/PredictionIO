@@ -38,19 +38,18 @@ def getError(train,test,learner,nTesting):
             error[i] += errorFn(prediction, testNumber)/nTesting
     return error
 
+import simpleLearner
 import hmmLearner
 import partitionHmmLearner
-import partitionHmmLearner2
-import simpleLearner
 import combinationLearner
 import linReg
 import decision
 # Calculate the average error
 if __name__ == "__main__":
     # Parameters for learning, and testing, so that we don't take forever, every time
-    nLearning = 5000
-    nTesting = 20000
-    Learner = decision.DecisionTreeLearner
+    nLearning = 500
+    nTesting = 1000
+    Learner = partitionHmmLearner.Learner()
     
     train, test = getSplitData()
     print("Data acquisition complete.")
