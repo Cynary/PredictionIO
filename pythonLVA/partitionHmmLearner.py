@@ -1,4 +1,4 @@
-from itertools import islice
+from baseLearner import BaseLearner
 from sklearn import hmm
 from sklearn.cluster import KMeans
 import numpy as np
@@ -11,36 +11,22 @@ import time
 
 # Extension: actions have descriptions, how to add it to this model?
 
-class HMMLearner:
+class HMMLearner(BaseLearner):
     def __init__(self, clusters = 2):
         self.clusters = clusters
         self.models = None
         self.name = "HMM+Cluster(%d)" % self.clusters
 
-    # Data is input as lists of timestamps, and we want lists of intervals between
-    # actions.
-    # This function takes a list of (action, time) items, and outputs a list of
-    # intervals
-    # data: list of (time) -> list of (interval)
-    # This will actually be a list of single element lists, so that they can be used
-    # to train the HMM of scikit-learn
-    # Note: you should call this function for a single agent's data
-    def inputParser(self,data):
-        data = sorted(data)
-        prevTime = data[0][0]
-        output = []
-        for t in islice(data,1,len(data)):
-            output.append([t[0]-prevTime])
-            prevTime = t[0]
-        return np.array(output)
-
     def learn(self,data):
-        k = KMeans(init='k-means++', n_clusters=self.clusters, n_init=10)
-        k.fit([[float(len(u))] for ID,u in data])
-        print(k.cluster_centers_)
+        _,train,result = zip(*data)
+        y = [[number/duration] for number,duration in result]
+        
+        k = KMeans(init='k-means++', n_clusters=self.clusters, n_init=40)
+        k.fit(y)
+
         groups = [[] for i in range(self.clusters)]
-        for ID,u in data:
-            groups[k.predict(float(len(u)))[0]].append(self.inputParser(u))
+        for u,y in zip(IDs,train,y):
+            groups[k.predict(y)[0]].append(self.inputParser(u))
         self.models = [self.getModel(group) for group in groups]
 
     def predict(self, user, period):

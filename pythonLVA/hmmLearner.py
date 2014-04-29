@@ -32,7 +32,8 @@ class HMMLearner:
         return np.array(output)
 
     def learn(self,data):
-        self.model = self.getModel([self.inputParser(u) for ID,u in data])
+        _,train,_ = zip(*data)
+        self.model = self.getModel([self.inputParser(u) for u in train])
 
     def predict(self, user, period):
         userID,timeStamps = user
