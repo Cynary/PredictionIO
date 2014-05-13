@@ -34,12 +34,6 @@ class BaseLearner():
 
     def getFeatures(self,userAction):
         differences = self.inputParser(userAction)
-        for i,d in enumerate(userAction):
-            if d[2] == 'NULL':
-                d = d[:2] + (1990,) + d[3:]
-            else:
-                d = d[:2] + (float(d[2]),) + d[3:]
-            userAction[i] = d
         features = self.average(userAction)
         features = np.append(features, self.variance(userAction))
         features = np.append(features, self.average(differences))

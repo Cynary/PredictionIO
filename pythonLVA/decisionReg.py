@@ -8,18 +8,18 @@ from baseLearner import BaseLearner
 import numpy as np
 import code
 
-class DecisionTreeLearner(BaseLearner):
+class DecisionTreeRegressionLearner(BaseLearner):
     def __init__(self):
-        self.name = "DecisionTreeLearner"
+        self.name = "DecisionTreeRegressionLearner"
 
     def learn(self, data):
         _,train,result = zip(*data)
         X = [self.getFeatures(u) for u in train]
         y = [number/duration for number,duration in result]
         
-        self.model = tree.DecisionTreeClassifier(max_depth=6)
+        self.model = tree.DecisionTreeRegressor(max_depth=6,min_samples_leaf=100)
         self.model.fit(X,y)
-        with open("graph.dot","w") as dot_data:
+        with open("graphReg.dot","w") as dot_data:
             tree.export_graphviz(self.model, out_file=dot_data, feature_names=[
                 "Average timestamp",
                 "Average rating",
@@ -37,11 +37,11 @@ class DecisionTreeLearner(BaseLearner):
                 "Worst rating",
                 "Best rating",
             ])
-
+        
     def predict(self, user, period):
         ID,actions = user
         rate = self.model.predict(self.getFeatures(actions))[0]
         return rate*period
 
 def Learner():
-    return lambda: DecisionTreeLearner()
+    return lambda: DecisionTreeRegressionLearner()

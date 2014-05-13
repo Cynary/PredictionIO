@@ -4,7 +4,7 @@ import simpleLearner
 def Learner(clusters=2):
     global learners,alphas
     learners = [
-        partitionHmmLearner.HMMLearner(clusters),
+        partitionHmmLearner.PartitionHMMLearner(clusters),
         simpleLearner.SimpleLearner()]
     alphas = [0.5,0.5]
 

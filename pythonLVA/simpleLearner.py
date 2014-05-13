@@ -26,6 +26,6 @@ class SimpleLearner():
         learnPeriod = data[-1][0]-data[0][0] + oneDay
         nactions = len(data)
         rate = nactions/learnPeriod # #actions/s
-        return period*rate # #actions
+        return (period-oneDay)*rate # #actions
 
 Learner = lambda: lambda: SimpleLearner()

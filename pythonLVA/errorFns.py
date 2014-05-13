@@ -15,3 +15,9 @@ def magError(predicted,actual):
     predOrder = math.log(predicted) if predicted > 0 else -1
     actualOrder = math.log(actual) if predicted > 0 else -1
     return abs(predOrder-actualOrder)
+
+def underError(predicted,actual):
+    return percentError(predicted,actual) if predicted<actual else 0
+
+def overError(predicted,actual):
+    return percentError(predicted,actual) if predicted>actual else 0

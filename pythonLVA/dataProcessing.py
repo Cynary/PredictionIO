@@ -55,7 +55,7 @@ def splitFn(actions, fracTrain=0.5):
     # Note: these durations are accurate to within a day, so we add a day.
     # Otherwise, the following bug happened: a lot of ratings in one day, and testDuration was 0.
     oneDay = 24*60*60 # seconds
-    testDuration = oneDay+test[0][0]-train[-1][0] if (len(test) != 0 and valid) else 0
+    testDuration = oneDay+test[0][0]-train[-1][0] if valid else 0
     
     return (train, len(test), testDuration, valid)
 

@@ -15,7 +15,7 @@ def Learner():
 
 class HMMLearner(BaseLearner):
     def __init__(self):
-        pass
+        self.name = "HMM"
 
     def learn(self,data):
         _,train,_ = zip(*data)
@@ -53,7 +53,7 @@ class HMMLearner(BaseLearner):
             try:
                 model.fit(data)
                 score = sum([1./len(data)*model.score(d) for d in data])
-            except ValueError:
+            except:
                 return prevModel
             print(n,score)
             if score < prevScore: # Local maxima found

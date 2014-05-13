@@ -27,6 +27,8 @@ predictError = [
     errorFns.magError,
     errorFns.percentError,
     errorFns.squareError,
+    errorFns.underError,
+    errorFns.overError,
     ]
 def getError(train,test,learner,nTesting):
     # Calculate average error
@@ -44,12 +46,13 @@ import partitionHmmLearner
 import combinationLearner
 import linReg
 import decision
+import decisionReg
 # Calculate the average error
 if __name__ == "__main__":
     # Parameters for learning, and testing, so that we don't take forever, every time
-    nLearning = 500
-    nTesting = 1000
-    Learner = partitionHmmLearner.Learner()
+    nLearning = 100000
+    nTesting = 20000
+    Learner = decisionReg.Learner()
     
     train, test = getSplitData()
     print("Data acquisition complete.")
