@@ -7,6 +7,9 @@ Helps to extract features from data.
 from itertools import islice
 import numpy as np
 
+def Learner():
+    return lambda: BaseLearner()
+
 class BaseLearner():
     def __init__(self):
         self.name = "Learner"
